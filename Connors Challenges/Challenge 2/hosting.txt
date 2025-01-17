@@ -1,0 +1,11 @@
+This challenge can be hosted blindly without spoiling the flag.
+
+Step 0: Make sure Python 3 is downloaded on the machine you're hosting the challenge from
+
+Step 1: Download ctf.py without opening the file
+
+Step 2: Navigate to the directory you downloaded the file to with your terminal
+
+Step 3: Launch ctf.py with the command "python3 ctf.py {PORT}" where PORT is any port number of your choice
+
+That's all there is to hosting. If you're still experiencing problems with this challenge, view the todo file. 
