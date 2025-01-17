@@ -8,4 +8,4 @@ Step 2: Navigate to the directory you downloaded the file to with your terminal
 
 Step 3: Launch ctf.py with the command "python3 ctf.py {PORT}" where PORT is any port number of your choice
 
-That's all there is to hosting. If you're still experiencing problems with this challenge, view the todo file. 
+That's all there is to hosting. If you're still experiencing problems with this challenge, view the todo file. There's a chance your network configuration may be blocking the necessary communications from the server.
