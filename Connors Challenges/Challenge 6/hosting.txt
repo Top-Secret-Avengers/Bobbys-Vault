@@ -1,0 +1,31 @@
+TODO: Write these instructions for linux. Currently, instructions are for Windows Powershell
+
+This challenge has been dockerized. To host it:
+
+Step 0: Install docker
+
+Step 1: Download minecraft-server.tar (docker image)
+
+Step 2: Navigate to it in Powershell
+
+Step 3: Run the following command to load the image
+docker load --input .\minecraft-server.tar
+
+Step 4: Run the following command to run the image on port 25565
+docker run -d -p 25565:25565 --restart unless-stopped --name minecraft-server minecraft-server
+
+Step 5: Open docker desktop and look at it
+
+If for whatever reason you can't make the docker image load, the Challenge 6 folder also has all of the necessary files to build the docker image.
+
+To build the image:
+
+Step 1: Download all of the files in the "Files for Image" folder and put them in the same folder
+
+Step 2: Navigate to that folder in Powershell and run the following command
+docker build -t minecraft-server .
+
+Step 3: Run the following command to run the image on port 25565
+docker run -d -p 25565:25565 --restart unless-stopped --name minecraft-server minecraft-server
+
+If you're interested in seeing the solution to the challenge, I've included my chicken scratch master dock in the Challenge 6 folder as well. Remember, reading it will spoil the challenge.
