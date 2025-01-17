@@ -28,4 +28,6 @@ docker build -t minecraft-server .
 Step 3: Run the following command to run the image on port 25565
 docker run -d -p 25565:25565 --restart unless-stopped --name minecraft-server minecraft-server
 
+LMK if these steps for building don't work, it's been a few weeks since I did it and I don't remember entirely.
+
 If you're interested in seeing the solution to the challenge, I've included my chicken scratch master dock in the Challenge 6 folder as well. Remember, reading it will spoil the challenge.
