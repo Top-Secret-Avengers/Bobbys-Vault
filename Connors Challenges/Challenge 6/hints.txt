@@ -1,0 +1,8 @@
+TODO: Make good hints
+
+Just so I don't forget to write these as hints later, here are two REALLY important ones
+
+1: You'll need to compile a java class for this challenge. Make absolutely sure that you're compiling it in class file version 52 or earlier. Nearly every modern Java compiler compiles a newer class file version than this, so you'll need to download an old Java.
+2: When writing a class for this challenge, make sure it implements the ObjectFactory interface. You technically shouldn't have to, but I couldn't figure out how to do it without this.
+
+Good luck figuring out why these two things are important :)
