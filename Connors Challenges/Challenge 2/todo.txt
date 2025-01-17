@@ -1,0 +1,6 @@
+TODO:
+Dockerize
+
+This challenge may need tweaked for RMU's lab and for docker. The challenge involves sending specific packets to the user, but my implementation may be flawed. I believe that when the program is dockerized, some aspect of docker acts as a middleman in network communications. This means the packets that the user needs to solve the problem are first sent to Docker, and Docker drops the packets.
+
+If you're hosting the problem yourself and are struggling to confirm the challenge is even working, talk to/email Connor at cjqst262@mail.rmu.edu
